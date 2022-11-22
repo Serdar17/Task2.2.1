@@ -224,8 +224,9 @@ class Report:
         return
 
 
-inputParam = InputConnect()
-dataSet = DataSet.get_dataset(inputParam.params[0])
-InputConnect.print_data_dict(inputParam, dataSet)
-report = Report(dataSet.dict_lict)
-report.generate_excel(inputParam.params[1])
+def main_excel():
+    inputParam = InputConnect()
+    dataSet = DataSet.get_dataset(inputParam.params[0])
+    InputConnect.print_data_dict(inputParam, dataSet)
+    report = Report(dataSet.dict_lict)
+    report.generate_excel(inputParam.params[1])
