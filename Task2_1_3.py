@@ -300,9 +300,9 @@ class Report:
         config = pdfkit.configuration(wkhtmltopdf=r'D:\wkhtmltopdf\bin\wkhtmltopdf.exe')
         pdfkit.from_string(pdf_template, 'report.pdf', configuration=config, options=options)
 
-
-inputParam = InputConnect()
-dataSet = DataSet.get_dataset(inputParam.params[0])
-InputConnect.print_data_dict(inputParam, dataSet)
-report = Report(dataSet.dict_lict)
-report.generate_pdf(inputParam.params[1])
+def main_pdf():
+    inputParam = InputConnect()
+    dataSet = DataSet.get_dataset(inputParam.params[0])
+    InputConnect.print_data_dict(inputParam, dataSet)
+    report = Report(dataSet.dict_lict)
+    report.generate_pdf(inputParam.params[1])
