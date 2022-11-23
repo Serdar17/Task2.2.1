@@ -4,34 +4,57 @@ import re
 import prettytable
 from prettytable import PrettyTable
 
+"""Словарь для перевода названий колонок в csv файле"""
 dic_naming = {"name": "Название", "description": "Описание", "key_skills": "Навыки", "experience_id": "Опыт работы",
               "premium": "Премиум-вакансия", "employer_name": "Компания", "salary_to": "Оклад",
               "area_name": "Название региона",
               "published_at": "Дата публикации вакансии", "True": "Да", "False": "Нет", "FALSE": "FALSE",
               "TRUE": "TRUE",
               "value": "Идентификатор валюты оклада"}
+
+"""Словарь для перевода полей класса Vacancy с опытой работы"""
 work_experience = {"noExperience": "Нет опыта", "between1And3": "От 1 года до 3 лет",
                    "between3And6": "От 3 до 6 лет", "moreThan6": "Более 6 лет"}
+
+"""Словарь для лексикографической сортировки вакансий"""
 work_experience_id = {"Нет опыта": 1, "От 1 года до 3 лет": 2, "От 3 до 6 лет": 3, "Более 6 лет": 4}
+
+"""Словарь для перевода поля с валютой оклада"""
 currencies = {"AZN": "Манаты", "BYR": "Белорусские рубли", "EUR": "Евро", "GEL": "Грузинский лари",
               "KGS": "Киргизский сом",
               "KZT": "Тенге", "RUR": "Рубли", "UAH": "Гривны", "USD": "Доллары", "UZS": "Узбекский сум"}
 
+"""Словарь для перевода з/п в рубли"""
 currency_to_rub = {
     "AZN": 35.68, "BYR": 23.91, "EUR": 59.90, "GEL": 21.74, "KGS": 0.76,
     "KZT": 0.13, "RUR": 1, "UAH": 1.64, "USD": 60.66, "UZS": 0.0055}
 
 
 class DataSet:
+    """Класс для хранения списка вакансий.
+
+    Attributes:
+        file_name (str): Название файла
+        vacancies_objects (list): Список вакансий
+    """
     def __init__(self, file_name):
+        """
+        Конструктор для инициализация объекта DataSet, который создает поле для хранения списка вакансий
+
+        Args:
+             file_name (str): Название файла
+        """
         self.file_name = file_name
         self.vacancies_objects = list()
 
-    @staticmethod
-    def get_dataset(file_name):
-        data = DataSet.csv_reader(file_name)
-        dict_list = DataSet.csv_filter(data[0], data[1])
-        dataset = DataSet(file_name)
+    def get_dataset(self):
+        """ Считывает и фильтрует csv файл и формирует из строк объекты типа Vacancy для хранения в списке
+
+        :return:
+            DataSet: Объект класса DataSet
+        """
+        data = self.csv_reader()
+        dict_list = self.csv_filter(data[0], data[1])
         for item in dict_list:
             args = list()
             salary = None
@@ -46,18 +69,30 @@ class DataSet:
             vacancy = Vacancy(args)
             vacancy.key_skills = skills
             vacancy.salary = salary
-            dataset.vacancies_objects.append(vacancy)
-        return dataset
+            self.vacancies_objects.append(vacancy)
+        return self
 
-    @staticmethod
-    def remove_tags_and_spaces(items):
+    def remove_tags_and_spaces(self, items):
+        """ Очищает строки от тегов и пустых пробелов
+
+        Args:
+            items (list): Список строк
+
+        :returns:
+            list: Cписок очищенных строк
+        """
         for i in range(len(items)):
             items[i] = " ".join(re.sub(r"\<[^>]*\>", "", items[i]).split())
         return items
 
-    @staticmethod
-    def csv_reader(file_name):
-        with open(file_name, "r", encoding="utf-8-sig", newline="") as file:
+    def csv_reader(self):
+        """ Считывает csv файл
+
+        :returns:
+            str: Строка с заголовками csv файла
+            list: Список строк
+        """
+        with open(self.file_name, "r", encoding="utf-8-sig", newline="") as file:
             data = [x for x in csv.reader(file)]
         if len(data) == 0:
             print("Пустой файл")
@@ -69,13 +104,19 @@ class DataSet:
         rows = [x for x in data[1:] if len(x) == len(columns) and not x.__contains__("")]
         return columns, rows
 
-    @staticmethod
-    def csv_filter(columns, rows):
+    def csv_filter(self, columns, rows):
+        """Фильтрует и формирует из строк csv файла список словарей
+
+        :param columns: Строка с заголовками csv файла
+        :param rows: Список строк csv файла
+        :return:
+            list: Список словарей где key - это название колонки, а value - значение в определенной строке
+        """
         dic_list = list()
         for row in rows:
             dic_result = dict()
             for i in range(len(row)):
-                items = DataSet.remove_tags_and_spaces(row[i].split('\n'))
+                items = self.remove_tags_and_spaces(row[i].split('\n'))
                 dic_result[columns[i]] = items[0] if len(items) == 1 else "; ".join(items)
             dic_result["premium"] = dic_naming[dic_result["premium"]]
             dic_result["salary_from"] = [dic_result["salary_from"], dic_result.pop("salary_to"),
@@ -85,7 +126,25 @@ class DataSet:
 
 
 class Vacancy:
+    """
+    Класс для предоставления вакансии.
+
+    Attributes:
+        name (str): Название вакансии
+        description (str): Описание вакансии
+        key_skills (list): Название вакансии
+        experience_id (str): Опыт работы
+        premium (str): Премиум вакансия
+        employer_name (str): Название компании
+        salary (Salary): Объект класса Salary
+        area_name (str): Название региона
+        published_at (str): Дата публикации вакансии
+    """
     def __init__(self, args):
+        """Конструктов для инициализации вакансии
+
+        :param args: Список строк с данными о вакансии
+        """
         self.name = args[0]
         self.description = args[1]
         self.key_skills = list()
@@ -98,7 +157,20 @@ class Vacancy:
 
 
 class Salary:
+    """
+    Класс для предоставления зарплаты.
+
+    Attributes:
+        salary_from (str): Нижняя граница вилки оклада
+        salary_to (str): Верхняя граница вилки оклада
+        salary_gross (str): Описание налога
+        salary_currency (str): Валюта оклада
+    """
     def __init__(self, args):
+        """Конструктов для инициализации зарплаты
+
+        :param args: Список строк с данными о зарплате
+        """
         self.salary_from = args[0]
         self.salary_to = args[1]
         self.salary_gross = args[2]
@@ -106,11 +178,23 @@ class Salary:
 
 
 class InputConnect:
+    """Класс для ввода данных и формирования вакансии в табличках
+
+    Args:
+        params (tuple): Кортеж с названием файла, профессии, параметрами сортировки, залоговками и количеством
+        выводимых вакансии в табличке
+    """
     def __init__(self):
+        """Конструктор для инициализации объекта InputConnect"""
         self.params = InputConnect.get_params()
 
     @staticmethod
     def get_params():
+        """Статический метод для ввода данные о вакансии
+
+        :return: Кортеж с названием файла, профессии, параметрами сортировки, залоговками и количеством
+        выводимых вакансии в табличке
+        """
         file_name = input("Введите название файла: ")
         filter_params = input("Введите параметр фильтрации: ")
         sort_param = input("Введите параметр сортировки: ")
@@ -122,6 +206,13 @@ class InputConnect:
 
     @staticmethod
     def check_params(params, sort_param, sort_order):
+        """Валидация параметров вводимых пользователем, если один из параметров не валидный, то завершается
+        выполнение программы
+        :param params: Строка с параметрами фильтрации
+        :param sort_param: Строка с параметрами сортировки
+        :param sort_order: Строка с правилами сортировки
+        :return: None
+        """
         if not params.__contains__(':') and len(params) > 1:
             print("Формат ввода некорректен")
             exit(0)
@@ -138,6 +229,11 @@ class InputConnect:
 
     @staticmethod
     def universal_parser_csv(self, data: DataSet):
+        """Статический Метод, который сортирует и фильтрует список вакансий
+        :param self: Объект класса InputConnect
+        :param data: Объект класса DataSet
+        :return: Форматировнный список вакансии
+        """
         filter_params = self.params[1].replace(',', '').split(': ')
         sort_order = len(self.params[3]) != 0 and self.params[3] == "Да"
         data.vacancies_objects = InputConnect.filter_by_params(filter_params, data.vacancies_objects)
@@ -146,19 +242,40 @@ class InputConnect:
 
     @staticmethod
     def filter_by_params(params, vacancies_objects):
+        """Статический Метод для фильтрации списка вакансии по определенному параметру
+        :param params: Параметр фильтрации
+        :param vacancies_objects: Список вакансий
+        :return: Отфильтраванный список вакансий
+        """
         def get_field_by_name(name, vacancy):
+            """Функция, которая возвращает поле класса Vacancy
+            :param name: Названия поля
+            :param vacancy: Объект класса Vacancy
+            :return: Поле объекта класса Vacancy
+            """
             if name == "Название":
                 return vacancy.name
             if name == "Описание":
                 return vacancy.description
             return vacancy.employer_name
         def get_field_by_param(param, vacancy):
+            """Функция, которая возвращает поле класса Vacancy
+            :param param: Названия поля
+            :param vacancy: Объект класса Vacancy
+            :return: Поле объекта класса Vacancy
+            """
             if param == "Премиум-вакансия":
                 return vacancy.premium
             if param == "Опыт работы":
                 return work_experience[vacancy.experience_id]
             return vacancy.area_name
         def filter_by_skills(skills, vacancy):
+            """Функция для сравнения требуемых и существующих скиллов
+            :param skills: Список навыков, требуемые для фильтрации
+            :param vacancy: Объект класса Vacancy
+            :return: Возвращает True, если при объеденении требуемый скиллов с существующими
+            длина списка осталась прежней, иначе False
+            """
             skills_set = set(vacancy.key_skills)
             return len(skills_set.union(set(skills))) == len(skills_set)
         filtered_vacancies = []
@@ -189,10 +306,25 @@ class InputConnect:
 
     @staticmethod
     def sort_by_params(vacancies_objects, sort_param, sort_order):
+        """Статический метод для сортировки вакансии по определенным критериям
+        :param vacancies_objects: Список вакансии для сортировки
+        :param sort_param: Строка с параметром сортировки
+        :param sort_order: Критерий сортировки
+        :return: Отсортированный список вакансий
+        """
         def get_currency_to_rub(vacancy):
+            """Вычисляет среднюю з/п вилки и переподит в рубли, при помощи словаря - currency_to_rub
+            :param vacancy: Объект класса Vacancy
+            :return: Средняя з/п вилки
+            """
             course = currency_to_rub[vacancy.salary.salary_currency]
             return int((float(vacancy.salary.salary_from) * course + float(vacancy.salary.salary_to) * course) / 2)
         def get_field_by_name(name, vacancy):
+            """Функция, которая возвращает поле класса Vacancy
+            :param name: Названия поля
+            :param vacancy: Объект класса Vacancy
+            :return: Поле объекта класса Vacancy
+            """
             if name == "Название":
                 return vacancy.name
             if name == "Описание":
@@ -221,13 +353,23 @@ class InputConnect:
 
     @staticmethod
     def formatter(vacancies_objects):
+        """Статический метод для форматирование списка вакансий
+        :param vacancies_objects: Список вакансий
+        :return: Отформатированный список вакансий
+        """
         def get_message(item):
+            """Функция, которая возвращает сообщение об вычете налогов
+            :param item: Строка с параметром налога
+            :return: Возвращает строку с сообщением об вычете налогов
+            """
             if item.lower() == "true" or item.lower() == "да":
                 return "Без вычета налогов"
             return "С вычетом налогов"
-        def get_experience(row): return work_experience[row.experience_id]
-        def get_date(row): return datetime.strptime(row.published_at, "%Y-%m-%dT%H:%M:%S%z").strftime("%d.%m.%Y")
         def get_salary(row):
+            """Функция для формирования строки с данными об з/п
+            :param row: Объект класса Vacancy
+            :return: Сообщение с данными об з/п
+            """
             message = get_message(row.salary.salary_gross)
             sum_min = InputConnect.get_valid_numbers(row.salary.salary_from)
             sum_max = InputConnect.get_valid_numbers(row.salary.salary_to)
@@ -236,13 +378,17 @@ class InputConnect:
                     f"({currencies[row.salary.salary_currency]}) ({message})"
 
         for vacancy in vacancies_objects:
-            vacancy.experience_id = get_experience(vacancy)
+            vacancy.experience_id = work_experience[vacancy.experience_id]
             vacancy.salary.salary_info = get_salary(vacancy)
-            vacancy.published_at = get_date(vacancy)
+            vacancy.published_at = datetime.strptime(vacancy.published_at, "%Y-%m-%dT%H:%M:%S%z").strftime("%d.%m.%Y")
         return vacancies_objects
 
     @staticmethod
     def get_valid_numbers(str_num):
+        """Возвращает корректную строку с з/п
+        :param str_num: Строка с з/п
+        :return: Возвращает строку в корректном виде
+        """
         num = int(str_num.partition('.')[0])
         first_num = str(num // 1000)
         if first_num != '0':
@@ -257,8 +403,19 @@ class InputConnect:
         return first_num, second_num
 
     @staticmethod
-    def print_table(self, dataset):
+    def print_table(self, dataset: DataSet):
+        """Метод для печати таблицы в консоль при помощи модуля prettytable
+
+        :param self: Объект класса InputConnect
+        :param dataset: Объект класса Dataset
+        :return: None
+        """
         def get_table(vacancies):
+            """Функция, которя создает таблицу при помощи класса PrettyTable и устанавливает
+            значения в строки таблицы
+            :param vacancies: Список вакансий
+            :return: Возвращает объект класса PrettyTable
+            """
             table = PrettyTable(hrules=prettytable.ALL, align='l')
             table.field_names = ["Название", "Описание", "Навыки", "Опыт работы", "Премиум-вакансия",
                                  "Компания", "Оклад", "Название региона", "Дата публикации вакансии"]
@@ -270,7 +427,17 @@ class InputConnect:
             return table
 
         def get_correct_row(vacancy):
+            """Функция для формирования строки таблицы из объекта класса Vacancy
+
+            :param vacancy: Объект класса Vacancy
+            :return: Возвращает отформатированную строку таблицы
+            """
             def trim_line(line):
+                """Срезает строку, если её длина больше или равно 100
+
+                :param line: Строка для среза
+                :return: Возвращает срезанную строку с символами '...' среза в конце, если её длина больше или равно 100
+                """
                 if len(line) >= 100:
                     return line[:100] + "..."
                 return line
@@ -281,6 +448,12 @@ class InputConnect:
             return result
 
         def get_correct_headings(headings, table):
+            """Функция, которая возвращает заголовки таблицы
+
+            :param headings: Список строк с заголовками
+            :param table: Объект класса PrettyTable
+            :return: Возвращает список заголовков
+            """
             if len(headings) == 1:
                 return table.field_names
             headings.append('№')
@@ -290,7 +463,6 @@ class InputConnect:
         table = get_table(vacancies_objects)
         headings = get_correct_headings(self.params[5], table)
         if len(self.params[4]) == 2:
-            time = datetime.now()
             print(table.get_string(start=int(self.params[4][0]) - 1, end=int(self.params[4][1]) - 1, fields=headings))
         elif len(self.params[4]) == 1:
             print(table.get_string(start=int(self.params[4][0]) - 1, fields=headings))
@@ -299,6 +471,9 @@ class InputConnect:
 
 
 def print_vacancies():
+    """Метод для формирования таблиц с вакансиями
+    :return:None
+    """
     inputParam = InputConnect()
-    dataSet = DataSet.get_dataset(inputParam.params[0])
+    dataSet = DataSet(inputParam.params[0]).get_dataset()
     InputConnect.print_table(inputParam, dataSet)
