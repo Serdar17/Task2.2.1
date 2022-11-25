@@ -202,10 +202,14 @@ class InputConnect:
         if len(salary_by_name) == 0:
             return {2022: 0}
         for key in salary_by_name.keys():
-            if name == "None":
-                salary_by_name[key] = math.floor(salary_by_name[key] / data.vacancies_count_by_year[key])
-            else:
-                salary_by_name[key] = math.floor(salary_by_name[key] / data.vacancies_count_by_profession_name[key])
+            try:
+                if name == "None":
+                    salary_by_name[key] = math.floor(salary_by_name[key] / data.vacancies_count_by_year[key])
+                else:
+                    salary_by_name[key] = math.floor(salary_by_name[key] / data.vacancies_count_by_profession_name[key])
+            except (ZeroDivisionError):
+                raise ZeroDivisionError("Словарь 'vacancies_count_by_year' или 'vacancies_count_by_profession_name'"
+                                        "содержит в качестве значение 0")
         return salary_by_name
 
     @staticmethod
