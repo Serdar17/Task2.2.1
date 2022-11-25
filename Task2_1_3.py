@@ -11,6 +11,7 @@ from openpyxl.styles.numbers import FORMAT_PERCENTAGE_00
 from jinja2 import Environment, FileSystemLoader
 import pdfkit
 from openpyxl.reader.excel import load_workbook
+import doctest
 
 """Словарь для перевода з/п в рубли"""
 currency_to_rub = {
@@ -41,6 +42,27 @@ class DataSet:
 
         :return:
             DataSet: Объект класса DataSet
+
+        >>> dataset = DataSet("vacancies.csv").get_dataset()
+        >>> type(dataset.vacancies_objects[0]).__name__
+        'Vacancy'
+
+        >>> dataset = DataSet("vacancies.csv").get_dataset()
+        >>> len(dataset.vacancies_objects)
+        91
+
+        >>> dataset = DataSet("vacancies.csv").get_dataset()
+        >>> dataset.vacancies_objects[0].salary_from
+        80000.0
+
+        >>> dataset = DataSet("vacancies.csv").get_dataset()
+        >>> dataset.vacancies_objects[0].salary_to
+        100000.0
+
+        >>> dataset = DataSet("vacancies.csv").get_dataset()
+        >>> dataset.vacancies_objects[0].published_at
+        2022
+
         """
         data = self.csv_reader()
         dict_list = self.csv_filter(data[0], data[1])
@@ -56,7 +78,6 @@ class DataSet:
 
         Args:
             items (list): Список строк
-
         :returns:
             list: Cписок очищенных строк
         """
@@ -70,6 +91,19 @@ class DataSet:
         :returns:
             str: Строка с заголовками csv файла
             list: Список строк
+
+        >>> items = DataSet("vacancies.csv").csv_reader()
+        >>> len(items[0])
+        12
+
+        >>> items = DataSet("vacancies.csv").csv_reader()
+        >>> len(items[1])
+        91
+
+        >>> items = DataSet("vacancies.csv").csv_reader()
+        >>> len(items[1][0][2])
+        171
+
         """
         with open(self.file_name, "r", encoding="utf-8-sig", newline="") as file:
             data = [x for x in csv.reader(file)]
@@ -106,7 +140,23 @@ class Vacancy:
         salary_currency (str): Валюта оклада
         area_name (str): Название региона
         published_at (str): Дата публикации вакансии
+
+    >>> type(Vacancy(args=["Senior Python Developer", "4500", "5500", "EUR", "Санкт-Петербург", "2022"])).__name__
+    'Vacancy'
+
+    >>> Vacancy(args=["Senior Python Developer", "4500", "5500", "EUR", "Санкт-Петербург", "2022"]).name
+    'Senior Python Developer'
+
+    >>> Vacancy(args=["Senior Python Developer", "4500", "5500", "EUR", "Санкт-Петербург", "2022"]).salary_from
+    4500.0
+
+    >>> Vacancy(args=["Senior Python Developer", "4500", "5500", "EUR", "Санкт-Петербург", "2022"]).salary_to
+    5500.0
+
+    >>> Vacancy(args=["Senior Python Developer", "4500", "5500", "EUR", "Санкт-Петербург", "2022"]).salary_currency
+    'EUR'
     """
+
     def __init__(self, args):
         """Конструктов для инициализации вакансии
 
@@ -176,6 +226,27 @@ class InputConnect:
         :param data: Объект класса DataSet
         :param name: Название профессии
         :return: Словарь, где key - год, а value - количество профессии в определенный год
+
+        >>> dataset = DataSet("vacancies.csv").get_dataset()
+        >>> vacancies_count = InputConnect.get_vacancies_count_by_name(dataset, "Аналитик")
+        >>> len(vacancies_count)
+        1
+
+        >>> dataset = DataSet("vacancies.csv").get_dataset()
+        >>> vacancies_count = InputConnect.get_vacancies_count_by_name(dataset, "Аналитик")
+        >>> vacancies_count[2022]
+        2
+
+        >>> dataset = DataSet("vacancies.csv").get_dataset()
+        >>> vacancies_count = InputConnect.get_vacancies_count_by_name(dataset, "None")
+        >>> len(vacancies_count)
+        1
+
+        >>> dataset = DataSet("vacancies.csv").get_dataset()
+        >>> vacancies_count = InputConnect.get_vacancies_count_by_name(dataset, "None")
+        >>> vacancies_count[2022]
+        91
+
         """
         vacancies_count = dict()
         for vacancy in data.vacancies_objects:
@@ -217,6 +288,26 @@ class InputConnect:
         """Статический метод для подсчета количества общее вакансии в определенном регионе
         :param data: Объект класса DataSet
         :return: Словарь, где key - название региона, а value - общее количество вакансии в данном регионе
+
+        >>> dataset = DataSet("vacancies.csv").get_dataset()
+        >>> vacancy_rate = InputConnect.get_vacancy_rate_by_city(dataset)
+        >>> len(vacancy_rate)
+        36
+
+        >>> dataset = DataSet("vacancies.csv").get_dataset()
+        >>> vacancy_rate = InputConnect.get_vacancy_rate_by_city(dataset)
+        >>> vacancy_rate["Москва"]
+        24
+
+        >>> dataset = DataSet("vacancies.csv").get_dataset()
+        >>> vacancy_rate = InputConnect.get_vacancy_rate_by_city(dataset)
+        >>> vacancy_rate["Санкт-Петербург"]
+        12
+
+        >>> dataset = DataSet("vacancies.csv").get_dataset()
+        >>> vacancy_rate = InputConnect.get_vacancy_rate_by_city(dataset)
+        >>> vacancy_rate["Екатеринбург"]
+        3
         """
         vacancy_rate = dict()
         for vacancy in data.vacancies_objects:
@@ -229,6 +320,31 @@ class InputConnect:
         процент вакансии больше чем 1.
         :param data: Объект класса DataSet
         :return: Отсортированный словарь, где key - название региона, а value - средняя з/п в данном регионе
+
+        >>> dataset = DataSet("vacancies.csv").get_dataset()
+        >>> dataset.vacancy_rate_by_city = InputConnect.get_vacancy_rate_by_city(dataset)
+        >>> salary_by_city = InputConnect.get_salary_by_city(dataset)
+        >>> len(salary_by_city)
+        36
+
+        >>> dataset = DataSet("vacancies.csv").get_dataset()
+        >>> dataset.vacancy_rate_by_city = InputConnect.get_vacancy_rate_by_city(dataset)
+        >>> salary_by_city = InputConnect.get_salary_by_city(dataset)
+        >>> salary_by_city["Москва"]
+        157438
+
+        >>> dataset = DataSet("vacancies.csv").get_dataset()
+        >>> dataset.vacancy_rate_by_city = InputConnect.get_vacancy_rate_by_city(dataset)
+        >>> salary_by_city = InputConnect.get_salary_by_city(dataset)
+        >>> salary_by_city["Сочи"]
+        26000
+
+        >>> dataset = DataSet("vacancies.csv").get_dataset()
+        >>> dataset.vacancy_rate_by_city = InputConnect.get_vacancy_rate_by_city(dataset)
+        >>> salary_by_city = InputConnect.get_salary_by_city(dataset)
+        >>> salary_by_city["Екатеринбург"]
+        103333
+
         """
         salary_by_city = dict()
         for vacancy in data.vacancies_objects:
@@ -441,12 +557,17 @@ class Report:
         config = pdfkit.configuration(wkhtmltopdf=r'D:\wkhtmltopdf\bin\wkhtmltopdf.exe')
         pdfkit.from_string(pdf_template, 'report.pdf', configuration=config, options=options)
 
+
 def main_pdf():
     """ Функция для запуска формирования отчета
     :return: None
     """
-    inputParam = InputConnect()
-    dataSet = DataSet(inputParam.params[0]).get_dataset()
-    InputConnect.print_data_dict(inputParam, dataSet)
-    report = Report(dataSet.dict_lict)
-    report.generate_pdf(inputParam.params[1])
+    inputparam = InputConnect()
+    dataset = DataSet(inputparam.params[0]).get_dataset()
+    InputConnect.print_data_dict(inputparam, dataset)
+    report = Report(dataset.dict_lict)
+    report.generate_pdf(inputparam.params[1])
+
+
+if __name__ == '__main__':
+    doctest.testmod()
