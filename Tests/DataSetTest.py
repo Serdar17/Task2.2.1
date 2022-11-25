@@ -37,6 +37,21 @@ class DataSetTest(TestCase):
         self.assertEqual(len(lines), 1)
         self.assertEqual(lines[0], "Группа компаний «МИАКОМ» Основана в Санкт-Петербурге")
 
+    def test_get_dataset_items_type(self):
+        dataSet = DataSet("../vacancies.csv").get_dataset()
+        self.assertEqual(type(dataSet.vacancies_objects[0]).__name__, "Vacancy")
+
+    def test_get_dataset_items_len(self):
+        dataSet = DataSet("../vacancies.csv").get_dataset()
+        self.assertEqual(len(dataSet.vacancies_objects), 91)
+
+    def test_get_dataset_first_item_fields(self):
+        dataSet = DataSet("../vacancies.csv").get_dataset()
+        self.assertEqual(dataSet.vacancies_objects[0].name, "Руководитель проекта по системам связи и информационным технологиям")
+        self.assertEqual(dataSet.vacancies_objects[0].salary_from, 80000.0)
+        self.assertEqual(dataSet.vacancies_objects[0].salary_to, 100000.0)
+        self.assertEqual(dataSet.vacancies_objects[0].published_at, 2022)
+
 
 if __name__ == '__main__':
     main()
