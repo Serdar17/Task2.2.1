@@ -1,7 +1,6 @@
 import csv
 import math
 from _datetime import datetime
-import re
 import matplotlib.pyplot as plt
 import numpy as np
 from openpyxl import Workbook
@@ -12,6 +11,7 @@ from jinja2 import Environment, FileSystemLoader
 import pdfkit
 from openpyxl.reader.excel import load_workbook
 import doctest
+from time import strptime
 
 """Словарь для перевода з/п в рубли"""
 currency_to_rub = {
@@ -36,6 +36,15 @@ class DataSet:
         """
         self.file_name = file_name
         self.vacancies_objects = list()
+
+    def get_year_from_time(self, published_at: str):
+        return strptime(published_at[:4], "%Y").tm_year
+
+    def get_year_from_datetime(self, published_at: str):
+        return datetime(int(published_at[:4]), int(published_at[5:7]), int(published_at[8:10])).year
+
+    def get_year_from_datetime_strptime(self, published_at: str):
+        return datetime.strptime(published_at, "%Y-%m-%dT%H:%M:%S%z").year
 
     def get_dataset(self):
         """ Считывает и фильтрует csv файл и формирует из строк объекты типа Vacancy для хранения в списке
@@ -65,25 +74,11 @@ class DataSet:
 
         """
         data = self.csv_reader()
-        dict_list = self.csv_filter(data[0], data[1])
-        for item in dict_list:
-            vacancy = Vacancy([f"{item['name']}", f"{item['salary_from']}", f"{item['salary_to']}",
-                               f"{item['salary_currency']}", f"{item['area_name']}", f"{item['published_at']}"])
-            vacancy.published_at = datetime.strptime(vacancy.published_at, "%Y-%m-%dT%H:%M:%S%z").year
+        for item in data[1]:
+            vacancy = Vacancy([item[0], item[1], item[2], item[3], item[4], item[5]])
+            vacancy.published_at = self.get_year_from_datetime(vacancy.published_at)
             self.vacancies_objects.append(vacancy)
         return self
-
-    def remove_tags_and_spaces(self, items):
-        """ Очищает строки от тегов и пустых пробелов
-
-        Args:
-            items (list): Список строк
-        :returns:
-            list: Cписок очищенных строк
-        """
-        for i in range(len(items)):
-            items[i] = " ".join(re.sub(r"\<[^>]*\>", "", items[i]).split())
-        return items
 
     def csv_reader(self):
         """ Считывает csv файл
@@ -110,24 +105,6 @@ class DataSet:
         columns = data[0]
         rows = [x for x in data[1:] if len(x) == len(columns) and not x.__contains__("")]
         return columns, rows
-
-    def csv_filter(self, columns, rows):
-        """Фильтрует и формирует из строк csv файла список словарей
-
-        :param columns: Строка с заголовками csv файла
-        :param rows: Список строк csv файла
-        :return:
-            list: Список словарей где key - это название колонки, а value - значение в определенной строке
-        """
-        dic_list = list()
-        for row in rows:
-            dic_result = dict()
-            for i in range(len(row)):
-                items = self.remove_tags_and_spaces(row[i].split('\n'))
-                dic_result[columns[i]] = items[0] if len(items) == 1 else "; ".join(items)
-            dic_list.append(dic_result)
-        return dic_list
-
 
 class Vacancy:
     """
@@ -185,8 +162,8 @@ class InputConnect:
         """Статический метод для ввода данные о вакансии
         :return: Кортеж с названием файла и профессии
         """
-        file_name = input("Введите название файла: ")
-        profession_name = input("Введите название профессии: ")
+        file_name = "vacancies_by_year.csv" #input("Введите название файла: ")
+        profession_name = "Программист" #input("Введите название профессии: ")
         return file_name, profession_name
 
     @staticmethod
@@ -562,11 +539,14 @@ def main_pdf():
     """ Функция для запуска формирования отчета
     :return: None
     """
+
     inputparam = InputConnect()
+    start_time = datetime.now()
     dataset = DataSet(inputparam.params[0]).get_dataset()
     InputConnect.print_data_dict(inputparam, dataset)
     report = Report(dataset.dict_lict)
     report.generate_pdf(inputparam.params[1])
+    print(f"Total time: {datetime.now() - start_time}")
 
 
 if __name__ == '__main__':
