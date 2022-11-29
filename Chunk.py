@@ -1,4 +1,5 @@
-import csv
+from _datetime import datetime
+import pandas as pd
 
 
 class Chunk:
@@ -13,50 +14,20 @@ class Chunk:
         """
         self.file_name = file_name
 
-    def read_csv(self):
-        """
-        Метод для чтения csv файла
-        :return:
-            columns (list): Список заголовков csv файла
-            rows (list): Список оставшихся строк
-        """
-        with open(self.file_name, "r", encoding="utf-8-sig", newline="") as file:
-            data = [x for x in csv.reader(file)]
-        columns = data[0]
-        rows = [x for x in data[1:] if len(x) == len(columns) and not x.__contains__("")]
-        return columns, rows
-
     def create_chunks(self):
         """
-        Разделяет данные по годам в отдельные csv файлы
+        Читает и разделяет данные по годам в отдельные csv файлы
         :return: None
         """
-        columns, rows = self.read_csv()
-        years = self.get_years(rows)
+        pd.set_option("expand_frame_repr", False)
+        df = pd.read_csv(self.file_name)
+        df["years"] = df["published_at"].apply(lambda x: datetime(int(x[:4]), int(x[5:7]), int(x[8:10])).year)
+        years = df["years"].unique()
         for year in years:
-            with open(rf'vacancies/vacancies_by_{year}_year.csv', mode="w", encoding='utf-8') as f:
-                file_writer = csv.writer(f, delimiter=",", lineterminator="\r")
-                file_writer.writerow(columns)
-                for row in rows:
-                    if row[5][:4] == year:
-                        file_writer.writerow(row)
-
-    def get_years(self, rows):
-        """
-        Метод для формирования списока годов из всех записей csv файла
-        :param rows: Список строк csv файла
-        :return:
-            list_years (list): Список годов csv файла
-        """
-        list_years = list()
-        for row in rows:
-            if not list_years.__contains__(row[5][:4]):
-                list_years.append(row[5][:4])
-        return list_years
+            data = df[df["years"] == year]
+            data.iloc[:, :6].to_csv(rf"vacancies/vacancies_by_{year}_year.csv", index=False)
 
 
-name = "vacancies_by_year.csv"
+name = input("Введите название файла для создания чанков: ")
 chunk = Chunk(name)
 chunk.create_chunks()
-
-
