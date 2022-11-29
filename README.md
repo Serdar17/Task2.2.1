@@ -25,3 +25,7 @@
 
 ### Время выполнения скрипта без профилирования
 ![img_5.png](img/img_task2_5.png)
+
+# Результат деления файла vacancies_by_year.csv
+![image_2022-11-28_22-15-02](https://user-images.githubusercontent.com/96997312/204340277-52b32d87-d392-439d-93e1-cce7f52543d7.png)
+
