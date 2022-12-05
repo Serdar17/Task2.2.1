@@ -51,7 +51,7 @@ class InputConnect:
         vacancy_name = input("Введите название профессии: ")
         return file_name, vacancy_name
 
-    def read_csv_by_path(self, data: DataSet, path: str):
+    def read_csv_by_path(self, path: str):
         """Метод для многопоточной обработки csv файлов при помощи модуля pandas
         :param path: Путь до csv файла с вакансиями
         :param data: Объект класса DataSet
@@ -63,10 +63,11 @@ class InputConnect:
         df_vacancy = df["name"].str.contains(self.vacancy_name)
 
         filter_by_year = df["published_at"] == year
-        data.salary_by_year[year] = int(df[filter_by_year]["salary"].mean())
-        data.vacancies_count_by_year[year] = len(df[filter_by_year])
-        data.salary_by_profession_name[year] = int(df[df_vacancy & filter_by_year]["salary"].mean())
-        data.vacancies_count_by_profession_name[year] = len(df[df_vacancy & filter_by_year])
+        salary_by_year = (year, int(df[filter_by_year]["salary"].mean()))
+        vacancies_count_by_year = (year, len(df[filter_by_year]))
+        salary_by_profession_name = (year, int(df[df_vacancy & filter_by_year]["salary"].mean()))
+        vacancies_count_by_profession_name = (year, len(df[df_vacancy & filter_by_year]))
+        return salary_by_year, vacancies_count_by_year, salary_by_profession_name, vacancies_count_by_profession_name
 
     def processesed(self, data: DataSet):
         """
@@ -76,10 +77,15 @@ class InputConnect:
         """
         process_args = []
         for file in os.listdir(self.file_name):
-            process_args.append((data, f"{self.file_name}/{file}"))
+            process_args.append(f"{self.file_name}/{file}")
 
         pool = Pool(processes=multiprocessing.cpu_count())
-        pool.starmap(self.read_csv_by_path, process_args)
+        for item in pool.map(self.read_csv_by_path, process_args):
+            data.salary_by_year[item[0][0]] = item[0][1]
+            data.vacancies_count_by_year[item[1][0]] = item[1][1]
+            data.salary_by_profession_name[item[2][0]] = item[2][1]
+            data.vacancies_count_by_profession_name[item[3][0]] = item[3][1]
+
         pool.terminate()
 
         print(f"Динамика уровня зарплат по годам: {data.salary_by_year}")
