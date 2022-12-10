@@ -29,3 +29,12 @@
 # Результат деления файла vacancies_by_year.csv
 ![image_2022-11-28_22-15-02](https://user-images.githubusercontent.com/96997312/204340277-52b32d87-d392-439d-93e1-cce7f52543d7.png)
 
+# Отчет о замерах
+## Без многопроцессорной обработки - 6.17 сек
+![photo_3_2022-12-10_19-08-24](https://user-images.githubusercontent.com/96997312/206860139-859ae931-f5c5-4365-a04e-0becc645c4f4.jpg)
+
+## Multiprocessing - 5.34 сек
+![photo_1_2022-12-10_19-08-24](https://user-images.githubusercontent.com/96997312/206860211-7e43e07c-c742-438f-af6e-b65d837effd7.jpg)
+
+## Concurrent futures - 4.25
+![photo_2_2022-12-10_19-08-24](https://user-images.githubusercontent.com/96997312/206860235-459b0ebf-93dc-4066-932a-1cdcbd8f284b.jpg)
