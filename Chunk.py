@@ -28,6 +28,6 @@ class Chunk:
             data.iloc[:, :6].to_csv(rf"vacancies/vacancies_by_{year}_year.csv", index=False)
 
 
-name = input("Введите название файла для создания чанков: ")
-chunk = Chunk(name)
-chunk.create_chunks()
+def create_chunk(file_name):
+    chunk = Chunk(file_name)
+    chunk.create_chunks()
