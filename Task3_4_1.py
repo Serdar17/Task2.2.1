@@ -3,6 +3,10 @@ import pandas as pd
 
 
 def convert_to_rur():
+    """
+    Метод для конвертации валюты csv файла с вакансиями
+    :return: None
+    """
     file_name = "vacancies_dif_currencies.csv"
     currencyFile_name = "dataframe.csv"
     df = pd.read_csv(file_name)
@@ -19,6 +23,12 @@ def convert_to_rur():
 
 
 def converter(x, df_currency):
+    """
+    Метод для конвертации валюты по строке
+    :param x: Исходная строка с средним окладом, названием валюты и датой публикации вакансии
+    :param df_currency: DataFrame с курсами валют по годам начиная с 2003 года
+    :return: Целое число, конвертированную по курсу
+    """
     if pd.isnull(x):
         return x
     values = x.split()
