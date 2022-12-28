@@ -7,7 +7,7 @@ def convert_to_rur():
     Метод для конвертации валюты csv файла с вакансиями
     :return: None
     """
-    file_name = "vacancies_dif_currencies.csv"
+    file_name = input("Введите название файла: ")
     currencyFile_name = "dataframe.csv"
     df = pd.read_csv(file_name)
     df_currency = pd.read_csv(currencyFile_name)
@@ -37,7 +37,7 @@ def converter(x, df_currency):
         course = df_currency[df_currency["date"] == d[:7]][values[1]].values
         if not math.isnan(course[0]):
             return round(float(values[0]) * course[0])
-    return x
+    return values[0]
 
 
 if __name__ == '__main__':

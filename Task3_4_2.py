@@ -51,7 +51,7 @@ class InputConnect:
         """Статический метод для ввода данные о вакансии
         :return: Кортеж с названием файла и профессии
         """
-        file_name = "vacancies_dif_currencies.csv" #input("Введите название файла: ")
+        file_name = input("Введите название файла: ")
         profession_name = input("Введите название профессии: ")
         return file_name, profession_name
 
@@ -62,7 +62,8 @@ class InputConnect:
         :param data: Объект класса DataSet
         """
         df = pd.read_csv(data.file_name)
-        df["salary"] = df[["salary_from", "salary_to"]].mean(axis=1)
+        df['salary'] = df['salary'].fillna(0)
+        df['salary'] = df['salary'].astype("int64")
         df["published_at"] = df["published_at"].apply(lambda d: int(d[:4]))
         years = df["published_at"].unique()
         df_vacancy = df["name"].str.contains(self.profession_name)
