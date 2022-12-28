@@ -3,6 +3,12 @@ import pandas as pd
 
 
 def converter_from_db(x, cursor):
+    """
+    Метод для конвертации валюты, курс валюты берется из БД
+    :param x: Строка для конвертации
+    :param cursor: Объект класса Cursor
+    :return: Сконвертированную валюту в рубли
+    """
     if pd.isnull(x):
         return x
     values = x.split()
@@ -19,7 +25,7 @@ def converter_from_db(x, cursor):
 
 def convert_table():
     """
-    Скрипт для создания БД и записи из файла dataframe.csv со всеми курсами валют с 2003-2022 год
+    Скрипт для создания БД и конвертации валют файла vacancies_dif_currencies_orig.csv
     :return: None
     """
     try:
