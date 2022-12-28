@@ -10,19 +10,6 @@ def create_table():
         sqlite_connection = sqlite3.connect('test.db')
         cursor = sqlite_connection.cursor()
 
-        # Запрос для создание таблицы, где exchange_rates - название таблицы
-        sqlite_select_query = """CREATE TABLE exchange_rates(
-            date_text text,
-            USD float,
-            EUR float,
-            KZT float,
-            UAH float,
-            BYR float
-        ) 
-        """
-        cursor.execute(sqlite_select_query)
-        sqlite_connection.commit()
-
         df = pd.read_csv("dataframe.csv")
         # Запись в созданную таблицу текущий dataframe
         df.to_sql('exchange_rates', sqlite_connection, if_exists='replace', index=False)
