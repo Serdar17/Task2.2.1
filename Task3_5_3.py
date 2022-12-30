@@ -50,10 +50,30 @@ def create_table():
         GROUP BY SUBSTRING(published_at, 1, 4)
         """)
 
+        # Sql запрос для подсчета уровня зарплат по городам
+        salary_by_city_query = (f"""SELECT area_name AS 'Город', ROUND(AVG(salary), 2) AS 'Уровень зарплат по городам'
+        FROM converted_vacancy
+        GROUP BY area_name
+        HAVING COUNT(*) >= (SELECT COUNT(*) FROM converted_vacancy) / 100
+        ORDER BY ROUND(AVG(salary), 2) DESC 
+        LIMIT 10
+        """)
+
+        # Sql запрос для подсчета доли вакансии по городам
+        vacancy_count_by_city_query = (f"""SELECT area_name AS 'Город', 
+        100 * COUNT(*) / (select COUNT(*) from converted_vacancy) AS 'Доля вакансий' FROM converted_vacancy
+        GROUP BY area_name
+        HAVING COUNT(*) >= (SELECT COUNT(*) FROM converted_vacancy) / 100
+        ORDER BY COUNT(*) DESC 
+        LIMIT 10
+        """)
+
         print_statistics_by_query_from_db(sqlite_connection, salary_by_year_query)
         print_statistics_by_query_from_db(sqlite_connection, salary_count_query)
         print_statistics_by_query_from_db(sqlite_connection, salary_by_name_query)
         print_statistics_by_query_from_db(sqlite_connection, salary_count_by_name_query)
+        print_statistics_by_query_from_db(sqlite_connection, salary_by_city_query)
+        print_statistics_by_query_from_db(sqlite_connection, vacancy_count_by_city_query)
 
         cursor.close()
 
