@@ -44,7 +44,7 @@ def create_table():
 
         # Sql запрос для подсчета количества вакансии по выбранной профессии
         salary_count_by_name_query = (f"""SELECT SUBSTRING(published_at, 1, 4) AS 'Год', COUNT(salary) 
-        AS 'Средняя з/п - {prof_name}'
+        AS 'Количетсво вакансий - {prof_name}'
         FROM converted_vacancy
         WHERE name LIKE '%{prof_name}%'
         GROUP BY SUBSTRING(published_at, 1, 4)
