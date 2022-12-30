@@ -18,9 +18,7 @@ def converter_from_db(x, cursor):
     WHERE date = '{values[2]}'
     """)
     course = cursor.fetchone()
-    if course[1] != None:
-        return round(float(values[0]) * course[1])
-    return values[0]
+    return course[1] is not None if round(float(values[0]) * course[1]) else values[0]
 
 
 def convert_table():

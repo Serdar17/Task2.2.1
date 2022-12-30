@@ -12,7 +12,6 @@ from openpyxl.reader.excel import load_workbook
 import pandas as pd
 import os
 import multiprocessing
-from itertools import repeat
 
 
 class DataSet:

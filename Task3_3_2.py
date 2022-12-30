@@ -3,13 +3,13 @@ import pandas as pd
 
 
 def convert_to_rur():
-    file_name = "vacancies_dif_currencies.csv"
+    file_name = "vacancies_dif_currencies_orig.csv"
     currencyFile_name = "dataframe.csv"
     df = pd.read_csv(file_name)
     df_currency = pd.read_csv(currencyFile_name)
     df.insert(1, "salary", None)
     df["salary"] = df[["salary_from", "salary_to"]].mean(axis=1)
-    df["salary"] = df["salary"].astype(str) + " " + + df["salary_currency"] + " " + df["published_at"]
+    df["salary"] = df["salary"].astype(str) + " " + df["salary_currency"] + " " + df["published_at"]
     df["salary"] = df["salary"].apply(lambda x: converter(x, df_currency))
 
     df = df.drop(columns=['salary_from', 'salary_to', 'salary_currency'])

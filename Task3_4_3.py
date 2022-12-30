@@ -18,7 +18,7 @@ class DataSet:
         file_name (str): Название файла
         vacancies_objects (list): Список вакансий
     """
-
+    name = ""
     def __init__(self, file_name):
         """
         Конструктор для инициализация объекта DataSet, который создает поле для хранения списка вакансий
@@ -64,8 +64,7 @@ class InputConnect:
         :param data: Объект класса DataSet
         """
         df = pd.read_csv(data.file_name)
-        df['salary'] = df['salary'].fillna(0)
-        df['salary'] = df['salary'].astype("int64")
+        df = df[df["salary"].notnull()]
         df["published_at"] = df["published_at"].apply(lambda d: int(d[:4]))
         years = df["published_at"].unique()
         df_vacancy = df["name"].str.contains(self.profession_name)
@@ -93,10 +92,11 @@ class Report:
     """Класс для формирования отчетности в виде pdf, excel или png файла"""
 
     @staticmethod
-    def generate_excel(profession_name, data: DataSet):
+    def generate_excel(profession_name, area_name, data: DataSet):
         """Метод для генерации excel файла по названию профессии, после запуска данного метода
         файл с расширением xlsx появится в локальной директории проекта.
 
+        :param area_name: Название региона
         :param profession_name: Название профессии
         :return: None
         """
@@ -150,8 +150,8 @@ class Report:
         sheet_1 = wb.worksheets[0]
         sheet_1.title = "Статистика по годам"
         sheet_2 = wb.create_sheet("Статистика по городам")
-        headers = ["Год", "Средняя зарплата", f"Средняя зарплата - {profession_name}",
-                   "Количество вакансий", f"Количество вакансий - {profession_name}"]
+        headers = ["Год", "Средняя зарплата", f"Средняя зарплата - {profession_name}({area_name})",
+                   "Количество вакансий", f"Количество вакансий - {profession_name}({area_name})"]
         set_headers(headers, sheet_1['A1':'E1'][0])
 
         for key in data.salary_by_year:
@@ -178,9 +178,10 @@ class Report:
         return
 
     @staticmethod
-    def generate_image(profession_name, data: DataSet):
+    def generate_image(profession_name, area_name, data: DataSet):
         """Метод для генерирования картинки по названию профессии с графиками
         после запуска данного метода файл с расширением .png появится в локальной директории проекта.
+        :param area_name: Название региона
         :param profession_name: Название професии
         """
 
@@ -203,7 +204,7 @@ class Report:
         ax = fig.add_subplot(221)
         ax.set_title("Уровень зарплат по годам")
         ax.bar(dx1, data.salary_by_year.values(), width, label="средняя з/п")
-        ax.bar(dx2, data.salary_by_profession_name.values(), width, label=f"з/п {profession_name.lower()}")
+        ax.bar(dx2, data.salary_by_profession_name.values(), width, label=f"з/п {profession_name.lower()}({area_name.lower()})")
         ax.set_xticks(nums, data.salary_by_year.keys(), rotation="vertical")
         ax.legend(fontsize=8)
         ax.tick_params(axis="both", labelsize=8)
@@ -213,7 +214,7 @@ class Report:
         ax.set_title("Количество вакансии по годам")
         ax.bar(dx1, data.vacancies_count_by_year.values(), width, label="Количество вакансии")
         ax.bar(dx2, data.vacancies_count_by_profession_name.values(), width,
-               label=f"Количество вакансии\n{profession_name.lower()}")
+               label=f"Количество вакансии\n{profession_name.lower()}({area_name.lower()})")
         ax.set_xticks(nums, data.salary_by_year.keys(), rotation="vertical")
         ax.legend(fontsize=8)
         ax.tick_params(axis="both", labelsize=8)
@@ -241,14 +242,15 @@ class Report:
         return
 
     @staticmethod
-    def generate_pdf(profession_name, data: DataSet):
+    def generate_pdf(profession_name, area_name, data: DataSet):
         """Метода для генерации отчетности с графиком и таблицами.
         После запуска данного метода файл с расширением .pdf появится в локальной директории проекта.
 
+        :param area_name:
         :param profession_name: Название профессии
         """
-        Report.generate_excel(profession_name, data)
-        Report.generate_image(profession_name, data)
+        Report.generate_excel(profession_name, area_name, data)
+        Report.generate_image(profession_name, area_name, data)
         name = profession_name
         image_file = "graph.png"
         book = load_workbook("report.xlsx")
@@ -270,4 +272,4 @@ class Report:
 inputparam = InputConnect()
 dataset = DataSet(inputparam.file_name)
 InputConnect.print_data_dict(inputparam, dataset)
-Report.generate_pdf(inputparam.profession_name, dataset)
+Report.generate_pdf(inputparam.profession_name, inputparam.area_name, dataset)

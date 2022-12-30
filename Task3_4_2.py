@@ -64,6 +64,7 @@ class InputConnect:
         df = pd.read_csv(data.file_name)
         df['salary'] = df['salary'].fillna(0)
         df['salary'] = df['salary'].astype("int64")
+        df = df[df["salary"] != 0]
         df["published_at"] = df["published_at"].apply(lambda d: int(d[:4]))
         years = df["published_at"].unique()
         df_vacancy = df["name"].str.contains(self.profession_name)
